@@ -9,26 +9,6 @@ var ncp = require('ncp').ncp;
 
 var apiPath = 'https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery';
 
-export class Common{
-    public static GetInputBox(token: boolean) {
-            if (token) {
-                let options: vscode.InputBoxOptions = {
-                    placeHolder: "Enter Github Personal Access Token",
-                    password: false,
-                    prompt: "Link is opened to get the github token."
-                };
-                return options;
-            }
-            else {
-                let options: vscode.InputBoxOptions = {
-                    placeHolder: "Enter GIST ID",
-                    password: false,
-                    prompt: "If you never upload the files in any machine before then upload it before."
-                };
-                return options;
-            }
-        };
-}
     
 export class ExtensionInformation{
     metadata: ExtensionMetadata;
@@ -50,7 +30,7 @@ export class ExtensionInformation{
     public static fromJSONList(text: string){
         var extList = new Array<ExtensionInformation>();
         var list = JSON.parse(text);
-        list.forEach(obj => {
+        list.forEach((obj: any) => {
             var meta = new ExtensionMetadata(obj.metadata.galleryApiUrl, obj.metadata.id, obj.metadata.downloadUrl, obj.metadata.publisherId, obj.metadata.publisherDisplayName, obj.metadata.date);
             var item = new ExtensionInformation();
             item.metadata = meta;
@@ -87,7 +67,7 @@ export class PluginService{
     private static CopyExtension(destination: string, source: string){
            return new Promise(
                 function(resolve, reject){
-                    ncp(source, destination, function(err){
+                    ncp(source, destination, function(err: Error){
                         if(err){
                             reject(err);
                         }
@@ -100,7 +80,7 @@ export class PluginService{
     private static WritePackageJson(dirName: string, packageJson: string){
         return new Promise(
                 function(resolve, reject){
-                    fs.writeFile(dirName + "/extension/package.json", packageJson, "utf-8", function(error, text){
+                    fs.writeFile(dirName + "/extension/package.json", packageJson, "utf-8", function(error: Error){
                         if(error){
                             reject(error);
                         }
@@ -112,7 +92,7 @@ export class PluginService{
     private static GetPackageJson(dirName: string, item: ExtensionInformation){
             return new Promise(
                 function(resolve, reject){
-                    fs.readFile(dirName + "/extension/package.json", "utf-8", function(error, text){
+                    fs.readFile(dirName + "/extension/package.json", "utf-8", function(error: Error, text: string){
                         if(error){
                             reject(error);
                         }
@@ -136,10 +116,10 @@ export class PluginService{
     }
     
     public static GetMissingExtensions(remoteList: Array<ExtensionInformation>){
-        var hashset = {};
+        var hashset: { [name: string]: ExtensionInformation } = {};
         
         var localList = this.CreateExtensionList();
-        for(var i=0;i<localList.length;i++){
+        for(var i=0;i < localList.length;i++){
             var ext = localList[i];
             if(hashset[ext.name] == null){
                 hashset[ext.name] = ext;
@@ -147,7 +127,7 @@ export class PluginService{
         }
         
         var missingList = new Array<ExtensionInformation>();
-        for(var i=0;i<remoteList.length;i++){
+        for(var i=0;i < remoteList.length;i++){
             var ext = remoteList[i];
             if(hashset[ext.name] == null){
                 missingList.push(ext);
@@ -160,7 +140,7 @@ export class PluginService{
     public static CreateExtensionList(){
         var list = new Array<ExtensionInformation>();
         
-        for(var i=0;i<vscode.extensions.all.length;i++){
+        for(var i=0;i < vscode.extensions.all.length;i++){
             var ext = vscode.extensions.all[i];
             if(ext.packageJSON.isBuiltin == false){
                 if(ext.packageJSON.__metadata == null){
@@ -186,7 +166,7 @@ export class PluginService{
         var header = {
             'Accept': 'application/json;api-version=3.0-preview.1'
         };
-        var extractPath = null;
+        var extractPath: string = null;
         
         var data = {
             'filters': [{
@@ -201,15 +181,15 @@ export class PluginService{
         return util.Util.HttpPostJson(apiPath, data, header)
         .then(function(res){
             
-            var targetVersion = null;
+            var targetVersion: any = null;
             var content = JSON.parse(res);
             
             // Find correct version
-            for(var i=0;i<content.results.length;i++){
+            for(var i=0;i < content.results.length;i++){
                 var result = content.results[i];
-                for(var k=0;k<result.extensions.length;k++){
+                for(var k=0;k < result.extensions.length;k++){
                     var extension = result.extensions[k];
-                    for(var j=0;j<extension.versions.length;j++){
+                    for(var j=0;j < extension.versions.length;j++){
                         var version = extension.versions[j];
                         if(version.version === item.version){
                             targetVersion = version;
